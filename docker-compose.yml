@@ -1,0 +1,65 @@
+services:
+  ##APACHE
+  apache:
+    container_name: asir_apache
+    image: php:7.2-apache
+    networks:
+      bind9_subnet:
+        ipv4_address: 10.1.0.111
+    ports:
+      - '80:80'
+      - '8000:8000'
+      - '443:443'
+  
+    volumes:
+      - ./html:/var/www/html
+      - ./confApache:/etc/apache2
+  
+  ## DNS
+  bind9:
+    container_name: asir_bind9
+    image: internetsystemsconsortium/bind9:9.16
+    ports:
+      - 5300:53/udp
+      - 5300:53/tcp
+    networks:
+      bind9_subnet:
+        ipv4_address: 10.1.0.222
+    volumes:
+      - ./conf:/etc/bind
+      - ./zonas:/var/lib/bind
+  
+  ##FIREFOX
+  firefox:
+    container_name: firefox
+    image: jlesage/firefox
+    ports: 
+      - '5800:5800'
+    dns:
+      - 10.1.0.222
+    networks:
+      bind9_subnet:
+        ipv4_address: 10.1.0.221
+
+##WIRESHARK
+  wireshark:
+    image: lscr.io/linuxserver/wireshark:latest
+    container_name: wireshark
+    cap_add:
+      - NET_ADMIN
+    security_opt:
+      - seccomp:unconfined 
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./wireshark:/config
+    ports:
+      - '3000:3000'
+    restart: unless-stopped
+networks:
+  bind9_subnet:
+    external: true
+
+
